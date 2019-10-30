@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"text/tabwriter"
+	"time"
 	"uptime/db"
 
 	"github.com/spf13/viper"
@@ -18,12 +19,61 @@ var (
 	upgrade2Height int64
 )
 
+var (
+	elChocoStartBlock    int64
+	elChocoEndBlock      int64
+	elChocoScorePerBlock int64
+
+	amazonasStartBlock    int64
+	amazonasEndBlock      int64
+	amazonasScorePerBlock int64
+)
+
 type handler struct {
 	db db.DB
 }
 
 func New(db db.DB) handler {
 	return handler{db}
+}
+
+func (h handler) GetUptime(startBlock int64, endBlock int64) {
+	// Read El Choco upgrade configs
+	elChocoStartBlock = viper.Get("el_choco_startblock").(int64)
+	elChocoEndBlock = viper.Get("el_choco_endblock").(int64)
+	elChocoScorePerBlock = viper.Get("el_choco_reward_score_per_block").(int64)
+
+	// Read Amazonas upgrade configs
+	amazonasStartBlock = viper.Get("amazonas_startblock").(int64)
+	amazonasEndBlock = viper.Get("amazonas_endblock").(int64)
+	amazonasScorePerBlock = viper.Get("amazonas_reward_score_per_block").(int64)
+
+	st := time.Now() //start time
+
+	//Format MM-DD-YYYY hh:mm:ss
+	fmt.Println("Fetching db", st.Format("01-02-2006 15:04:05"))
+
+	uptimes, err := h.db.GetValidatorsUptime(startBlock, endBlock, elChocoStartBlock, elChocoEndBlock, amazonasStartBlock, amazonasEndBlock)
+
+	et := time.Now() //end time
+
+	//Format MM-DD-YYYY hh:mm:ss
+	fmt.Println("DB fetch done", et.Format("01-02-2006 15:04:05"))
+
+	if err != nil {
+		fmt.Printf("Error while fetching uptime %v", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("----------------------------------------------------------------")
+
+	//Printing Uptime results in tabular view
+	fmt.Println(" Address\t Uptime Count \t Upgrade1 score \t Upgrade2 score \t Uptime score")
+
+	for _, data := range uptimes {
+		fmt.Println(data.ID, "\t ", data.UptimeCount,
+			"\t  ", strconv.Itoa(int(data.Upgrade1Block.Height)), "\t ", strconv.Itoa(int(data.Upgrade1Block.Height)))
+	}
 }
 
 func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
@@ -174,7 +224,7 @@ func ExportIntoCsv(data []ValidatorInfo) {
 		up1Score := strconv.Itoa(int(record.Info.Upgrade1Score))
 		up2Score := strconv.Itoa(int(record.Info.Upgrade2Score))
 		uptimeScore := fmt.Sprintf("%f", record.Info.UptimeScore)
-		addrObj := []string{record.ValAddress, record.Info.Moniker, uptimeCount, up1Score, up2Score, uptimeScore}
+		addrObj := []string{record.Info.OperatorAddr, record.Info.Moniker, uptimeCount, up1Score, up2Score, uptimeScore}
 		err := writer.Write(addrObj)
 
 		if err != nil {
