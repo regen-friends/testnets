@@ -24,16 +24,6 @@ var (
 	amazonasScorePerBlock int64
 )
 
-var (
-	elChocoStartBlock    int64
-	elChocoEndBlock      int64
-	elChocoScorePerBlock int64
-
-	amazonasStartBlock    int64
-	amazonasEndBlock      int64
-	amazonasScorePerBlock int64
-)
-
 type handler struct {
 	db db.DB
 }
