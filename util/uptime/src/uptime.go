@@ -68,7 +68,7 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 			"_id":          "$validators",
 			"uptime_count": bson.M{"$sum": 1},
 			"upgrade1_block": bson.M{
-				"$min": bson.M{
+				"$sum": bson.M{
 					"$cond": []interface{}{
 						bson.M{
 							"$and": []bson.M{
@@ -76,13 +76,13 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 								bson.M{"$lte": []interface{}{"$height", elChocoEndBlock}},
 							},
 						},
-						"$height",
-						"null",
+						1,
+						0,
 					},
 				},
 			},
 			"upgrade2_block": bson.M{
-				"$min": bson.M{
+				"$sum": bson.M{
 					"$cond": []interface{}{
 						bson.M{
 							"$and": []bson.M{
@@ -90,8 +90,8 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 								bson.M{"$lte": []interface{}{"$height", amazonasEndBlock}},
 							},
 						},
-						"$height",
-						"null",
+						1,
+						0,
 					},
 				},
 			},
@@ -172,8 +172,8 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 				OperatorAddr:   obj.Validator_details[0].Operator_address,
 				Moniker:        obj.Validator_details[0].Description.Moniker,
 				UptimeCount:    obj.Uptime_count,
-				Upgrade1Points: CalculateUpgradePoints(elChocoPointsPerBlock, obj.Upgrade1_block, elChocoEndBlock),
-				Upgrade2Points: CalculateUpgradePoints(amazonasPointsPerBlock, obj.Upgrade2_block, amazonasEndBlock),
+				Upgrade1Points: obj.Upgrade1_block,
+				Upgrade2Points: obj.Upgrade2_block,
 			},
 		}
 
