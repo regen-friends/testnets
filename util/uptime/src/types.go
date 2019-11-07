@@ -19,4 +19,6 @@ type Info struct {
 	UptimeCount    int64   `json:"uptimeCount"`
 	GenesisPoints  int64   `json:"genesisPoints"`
 	TotalPoints    float64   `json:"totalPoints"`
+	Proposal1VoteScore int64	`json:"proposal1VoteScore"`
+	Proposal2VoteScore int64	`json:"proposal2VoteScore"`
 }
